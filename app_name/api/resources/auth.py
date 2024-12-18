@@ -5,13 +5,15 @@ from flask_jwt_extended import (
     create_refresh_token,
     jwt_required,
     get_jwt_identity,
-    get_jwt
+    get_jwt,
+    decode_token
 )
 from app_name.api.restplus import api
 from app_name.api.schemas.login import (
     login_schema_success,
     login_schema,
-    access_token_schema
+    access_token_schema,
+    logout_schema
 )
 from app_name.models import User
 from app_name.helpers.authentication import (
@@ -60,28 +62,31 @@ class UserLogoutAccess(Resource):
 
     @classmethod
     @jwt_required()
-    @ns.response(200, "Access token has been revoked")
+    @ns.response(200, "Token has been revoked")
+    @ns.expect(logout_schema, validate=True)
     def post(cls):
+        data = request.json
+        
+        access_token = data.get("access_token")
+        refresh_token = data.get("refresh_token")
 
-        jti = get_jwt()['jti']
+        if not access_token or not refresh_token:
+            return {"message": "Both access and refresh tokens are required"}, 400
 
-        revoke_token(jti)
-        return {"message": 'Access token has been revoked'}
+        try:
+            access_payload = decode_token(access_token)
+            access_jti = access_payload.get("jti")
 
+            refresh_payload = decode_token(refresh_token)
+            refresh_jti = refresh_payload.get("jti")
 
-@ns.route('/logout/refresh')
-@api.doc(security='Authorization')
-class UserLogoutRefresh(Resource):
+            revoke_token(access_jti)
+            revoke_token(refresh_jti)
 
-    @classmethod
-    @jwt_required(refresh=True)
-    @ns.response(200, "Refresh token has been revoked")
-    def post(cls):
+            return {"message": "Token has been revoked"}, 200
 
-        jti = get_jwt()['jti']
-
-        revoke_token(jti)
-        return {"message": 'Refresh token has been revoked'}
+        except Exception as e:
+            return {"message": f"Failed to revoke token: {str(e)}"}, 400
 
 
 @ns.route('/refresh')

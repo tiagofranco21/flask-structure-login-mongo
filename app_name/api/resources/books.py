@@ -36,6 +36,8 @@ class BookCollection(Resource):
     @classmethod
     @ns.response(201, "Book successfully created.", schema_response)
     @ns.expect(book_schema, validate=True)
+    @api.doc(security='Authorization')
+    @access_required(["master", "admin"])
     def post(cls):
         """
         Creates a new book.
@@ -57,10 +59,12 @@ class BookCollection(Resource):
 
 @ns.route('/<string:book_id>')
 @ns.response(404, 'Book not found.')
+@api.doc(security='Authorization')
 class BookItem(Resource):
 
     @classmethod
     @ns.marshal_with(book_schema_dump)
+    @access_required(["master", "admin"])
     def get(cls, book_id):
         """
         Returns a book.
@@ -71,8 +75,10 @@ class BookItem(Resource):
         return marshal(book_obj, book_schema_dump)
 
     @classmethod
+    
     @ns.expect(book_schema, validate=True)
     @ns.response(200, 'Book successfully updated.', schema_response)
+    @access_required(["master", "admin"])
     def put(cls, book_id):
         """
         Updates a Book.
@@ -100,7 +106,6 @@ class BookItem(Resource):
 
     @classmethod
     @ns.response(204, 'Book successfully deleted.')
-    @api.doc(security='Authorization')
     @access_required(["master", "admin"])
     def delete(cls, book_id):
         """

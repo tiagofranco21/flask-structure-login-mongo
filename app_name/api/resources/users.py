@@ -50,10 +50,7 @@ class UserCollection(Resource):
         data = request.json
         user_obj = User.objects(email=data.get("email")).first()
         if user_obj:
-            return "Email already registered", 400
-
-        if data.get('password') != data.get('confirm_password'):
-            return {'message': 'The password and confirmation password do not match'}, 400
+            return {'message': "Email already registered"}, 400
 
         user_new = User(
             email=data.get("email"),
@@ -106,8 +103,6 @@ class UserItem(Resource):
         user_obj.role = data.get('role')
 
         if data.get('password'):
-            if data.get('password') != data.get('confirm_password'):
-                return {'message': 'The password and confirmation password do not match'}, 400
             user_obj.password = User.generate_hash(data.get('password'))
 
         try:

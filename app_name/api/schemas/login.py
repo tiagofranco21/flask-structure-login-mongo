@@ -16,3 +16,7 @@ access_token_schema = api.model('Login Success', {
     'access_token': fields.String(required=True),
 })
 
+logout_schema = api.model('Logout Form', {
+    'access_token': fields.String(required=True),
+    'refresh_token': fields.String(required=True),
+})
